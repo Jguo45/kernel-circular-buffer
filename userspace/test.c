@@ -8,7 +8,7 @@
 
 #include "buffer.h"
 
-#define MAX_ITERATE 12
+#define MAX_ITERATE 100
 
 // sem_t pmutex;
 // sem_t cmutex;
@@ -18,6 +18,8 @@ void* producer(void* arg) {
 
     for (int i = 0; i < MAX_ITERATE; i++) {
         usleep((rand() % 100) * 1000);
+        // usleep(2 * 1000);
+        // usleep(40 * 1000);
 
         // printf("test\n");
 
@@ -33,6 +35,8 @@ void* consumer(void* arg) {
     char data[DATA_LENGTH];
     for (int i = 0; i < MAX_ITERATE; i++) {
         usleep((rand() % 100) * 1000);
+        // usleep(40 * 1000);
+        // usleep(2 * 1000);
 
         dequeue_buffer_421(data);
 
