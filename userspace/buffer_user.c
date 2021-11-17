@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "buffer.h"
 
 static ring_buffer_421_t buffer;
@@ -35,6 +36,9 @@ long init_buffer_421(void) {
 
 	// Initialize your semaphores here.
 	// TODO
+	sem_init(&mutex, 0, 1);
+	sem_init(&fill_count, 0, 0);
+	sem_init(&empty_count, 0, SIZE_OF_BUFFER);
 
 	return 0;
 }
@@ -43,6 +47,10 @@ long enqueue_buffer_421(char * data) {
 	// NOTE: You have to modify this function to use semaphores.
 	if (!buffer.write) {
 		printf("write_buffer_421(): The buffer does not exist. Aborting.\n");
+		return -1;
+	}
+
+	if (buffer.length >= SIZE_OF_BUFFER) {
 		return -1;
 	}
 	memcpy(buffer.write->data, data, DATA_LENGTH);
@@ -55,6 +63,19 @@ long enqueue_buffer_421(char * data) {
 
 long dequeue_buffer_421(char * data) {
 	// NOTE: Implement this function.
+	if (!buffer.write) {
+		printf("dequeue_buffer_421(): The buffer does not exist. Aborting.\n");
+		return -1;
+	}
+	if (buffer.length <= 0) {
+		return -1;
+	}
+	memcpy(data, buffer.read->data, DATA_LENGTH);
+	memset(buffer.read->data, 0, DATA_LENGTH);
+
+	buffer.read = buffer.read->next;
+	buffer.length--;
+
 	return 0;
 }
 
