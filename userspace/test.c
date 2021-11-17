@@ -4,74 +4,53 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <time.h>
+#include <semaphore.h>
 
 #include "buffer.h"
 
-#define MAX_ITERATE 50
+#define MAX_ITERATE 12
 
-// void* producer(void* arg) {
-//     for (int i = 0; i < MAX_ITERATE; i++) {
-//         char* value;
-//         char* data;
-//         sprintf(value, "%d", i % 10);
-        
-//         usleep((rand() % 100) * 1000);
-//         memset(data, i % 10, DATA_LENGTH);
-//         enqueue_buffer_421(data);
-//         printf("Produced: %s\n", data);
-//     }
-// }
+// sem_t pmutex;
+// sem_t cmutex;
 
-// void* consumer(void* arg) {
-//     for (int i = 0; i < MAX_ITERATE; i++) {
-//         char *data;
-        
-//         usleep((rand() % 100) * 1000);
-//         dequeue_buffer_421(data);
-//         printf("Consumed: %s\n", data);
-//     }
-// }
+void* producer(void* arg) {
+    char data[DATA_LENGTH];
 
-void* test1(void* arg) {
-    for (int i = 0; i < 10; i++) {
-        // int timeout = rand() % 5;
-        // sleep(timeout);
+    for (int i = 0; i < MAX_ITERATE; i++) {
+        usleep((rand() % 100) * 1000);
 
-        printf("Thread 1: Value - %d Timeout - %d\n", i, 0);
+        // printf("test\n");
+
+        printf("Produced: %d\n", i % 10);
+        memset(data, '0' + (i % 10), DATA_LENGTH);
+        enqueue_buffer_421(data);
+
+        // printf("Produced: %s\n", data);
     }
 }
 
-void* test2(void* arg) {
-    for (int i = 0; i < 10; i++) {
-        // int timeout = rand() % 5;
-        // sleep(timeout);
+void* consumer(void* arg) {
+    char data[DATA_LENGTH];
+    for (int i = 0; i < MAX_ITERATE; i++) {
+        usleep((rand() % 100) * 1000);
 
-        printf("Thread 2: Value - %d Timeout - %d\n", i, 0);
+        dequeue_buffer_421(data);
+
+        printf("Consumed: %c\n", data[0]);
+
+        // printf("Consumed: %s\n", data);
     }
 }
 
 int main() {
-    // pthread_t t1, t2;
-    // // init_buffer_421();
-    // pthread_create(&t1, NULL, test1, NULL);
-    // pthread_create(&t2, NULL, test2, NULL);
-
-    // pthread_join(t1, NULL);
-    // pthread_join(t2, NULL);
-    char data[DATA_LENGTH];
-
+    pthread_t t1, t2;
     init_buffer_421();
 
-    for (int i = 0; i < 20; i++) {
-        memset(data, '0' + (i % 10), DATA_LENGTH);
-        enqueue_buffer_421(data);
-        // printf("%s\n", data);
-    }
-    char *dequeue;
-    for (int i = 0; i < 20; i++) {
-        dequeue_buffer_421(dequeue);
-        printf("%s\n", dequeue);
-    }
+    pthread_create(&t1, NULL, producer, NULL);
+    pthread_create(&t2, NULL, consumer, NULL);
+
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
 
     delete_buffer_421();
     return 0;
