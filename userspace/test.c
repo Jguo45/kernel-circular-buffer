@@ -8,10 +8,11 @@
 
 #include "buffer.h"
 
-#define MAX_ITERATE 100
+#define MAX_ITERATE 1000
 
-// sem_t pmutex;
-// sem_t cmutex;
+sem_t mutex;
+sem_t pmutex;
+sem_t cmutex;
 
 void* producer(void* arg) {
     char data[DATA_LENGTH];
@@ -21,11 +22,13 @@ void* producer(void* arg) {
         // usleep(2 * 1000);
         // usleep(40 * 1000);
 
-        // printf("test\n");
-
+        // sem_wait(&mutex);
         printf("Produced: %d\n", i % 10);
+
         memset(data, '0' + (i % 10), DATA_LENGTH);
         enqueue_buffer_421(data);
+        printf("-------------------------------\n");
+        // sem_post(&mutex);
 
         // printf("Produced: %s\n", data);
     }
@@ -33,14 +36,19 @@ void* producer(void* arg) {
 
 void* consumer(void* arg) {
     char data[DATA_LENGTH];
+    
     for (int i = 0; i < MAX_ITERATE; i++) {
         usleep((rand() % 100) * 1000);
-        // usleep(40 * 1000);
+        // usleep(80 * 1000);
         // usleep(2 * 1000);
+        // sem_wait(&mutex);
 
         dequeue_buffer_421(data);
 
         printf("Consumed: %c\n", data[0]);
+
+        printf("-------------------------------\n");
+        // sem_post(&mutex);
 
         // printf("Consumed: %s\n", data);
     }
@@ -48,6 +56,9 @@ void* consumer(void* arg) {
 
 int main() {
     pthread_t t1, t2;
+    sem_init(&mutex, 0, 1);
+    sem_init(&pmutex, 0, 1);
+    sem_init(&cmutex, 0, 1);
     init_buffer_421();
 
     pthread_create(&t1, NULL, producer, NULL);
@@ -57,5 +68,8 @@ int main() {
     pthread_join(t2, NULL);
 
     delete_buffer_421();
+    sem_destroy(&mutex);
+    sem_destroy(&pmutex);
+    sem_destroy(&cmutex);
     return 0;
 }
