@@ -71,7 +71,7 @@ SYSCALL_DEFINE1(enqueue_buffer_421, char*, data) {
 	buffer.length++;
 
 	printk("Enqueue: %d\n", data[0]);
-    print_semaphores();
+    // print_semaphores();
 	
 	// opens mutex
 	up(&mutex);
@@ -104,7 +104,7 @@ SYSCALL_DEFINE1(dequeue_buffer_421, char*, data) {
 	buffer.length--;
 
 	printk("Dequeue: %d\n", data[0]);
-	print_semaphores();
+	// print_semaphores();
 	// opens mutex
 	up(&mutex);
 
@@ -146,18 +146,18 @@ SYSCALL_DEFINE0(delete_buffer_421) {
 	return 0;
 }
 
-void print_semaphores(void) {
-	// You can call this method to check the status of the semaphores.
-	// Don't forget to initialize them first!
-	// YOU DO NOT NEED TO IMPLEMENT THIS FOR KERNEL SPACE.
-	// printk("========================\n");
-	int value;
-	sem_getvalue(&mutex, &value);
-	printk("sema mutex = %d\n", value);
-	sem_getvalue(&fill_count, &value);
-	printk("sema fill_count = %d\n", value);
-	sem_getvalue(&empty_count, &value);
-	printk("sema empty_count = %d\n", value);
-	printk("---------------------------------\n");
-	return;
-}
+// void print_semaphores(void) {
+// 	// You can call this method to check the status of the semaphores.
+// 	// Don't forget to initialize them first!
+// 	// YOU DO NOT NEED TO IMPLEMENT THIS FOR KERNEL SPACE.
+// 	// printk("========================\n");
+// 	int value;
+// 	sem_getvalue(&mutex, &value);
+// 	printk("sema mutex = %d\n", value);
+// 	sem_getvalue(&fill_count, &value);
+// 	printk("sema fill_count = %d\n", value);
+// 	sem_getvalue(&empty_count, &value);
+// 	printk("sema empty_count = %d\n", value);
+// 	printk("---------------------------------\n");
+// 	return;
+// }
