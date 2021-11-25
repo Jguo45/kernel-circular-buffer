@@ -150,6 +150,6 @@ void print_semaphores(void) {
 	printf("sem_t fill_count = %d\n", value);
 	sem_getvalue(&empty_count, &value);
 	printf("sem_t empty_count = %d\n", value);
-	// printf("========================\n");
+	printf("========================\n");
 	return;
 }

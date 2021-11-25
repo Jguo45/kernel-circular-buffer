@@ -48,6 +48,7 @@ SYSCALL_DEFINE0(init_buffer_421) {
 }
 
 SYSCALL_DEFINE1(enqueue_buffer_421, char*, data) {
+	long err_count;
 	// decrements empty_count
 	down(&empty_count);
 	
@@ -64,14 +65,20 @@ SYSCALL_DEFINE1(enqueue_buffer_421, char*, data) {
 	// closes mutex
 	down(&mutex);
 
-	memcpy(buffer.write->data, data, DATA_LENGTH);
+	// memcpy(buffer.write->data, data, DATA_LENGTH);
+	// if (copy_from_user(buffer.write->data, data, DATA_LENGTH) != 0) {
+	// 	printk("Failed to read data: %c\n", buffer.write->data[0]);
+	// }
+	err_count = copy_from_user(buffer.write->data, data, DATA_LENGTH);
+	if (err_count != 0) {
+		printk("Enqueue: Failed to copy %ld bytes\n", err_count);
+	}
 
 	// Advance the pointer.
 	buffer.write = buffer.write->next;
 	buffer.length++;
 
-	printk("Enqueue: %d\n", data[0]);
-    // print_semaphores();
+	printk("Enqueued: %c\n", data[0]);
 	
 	// opens mutex
 	up(&mutex);
@@ -83,6 +90,7 @@ SYSCALL_DEFINE1(enqueue_buffer_421, char*, data) {
 }
 
 SYSCALL_DEFINE1(dequeue_buffer_421, char*, data) {
+	long err_count;
 	// decrements fill_count
 	down(&fill_count);
 
@@ -98,13 +106,16 @@ SYSCALL_DEFINE1(dequeue_buffer_421, char*, data) {
 	// closes mutex
 	down(&mutex);
 
-	memcpy(data, buffer.read->data, DATA_LENGTH);
+	err_count = copy_to_user(data, buffer.read->data, DATA_LENGTH);
+	if (err_count != 0) {
+		printk("Dequeue: Failed to copy %ld bytes\n", err_count);
+	}
 
 	buffer.read = buffer.read->next;
 	buffer.length--;
 
-	printk("Dequeue: %d\n", data[0]);
-	// print_semaphores();
+	printk("Dequeued: %c\n", data[0]);
+	
 	// opens mutex
 	up(&mutex);
 
@@ -134,30 +145,11 @@ SYSCALL_DEFINE0(delete_buffer_421) {
 	// Free the final node.
 	kfree(curr);
 	curr = NULL;
+
 	// Reset the buffer.
 	buffer.read = NULL;
 	buffer.write = NULL;
 	buffer.length = 0;
-
-	// sem_destroy(&mutex);
-	// sem_destroy(&fill_count);
-	// sem_destroy(&empty_count);
 	
 	return 0;
 }
-
-// void print_semaphores(void) {
-// 	// You can call this method to check the status of the semaphores.
-// 	// Don't forget to initialize them first!
-// 	// YOU DO NOT NEED TO IMPLEMENT THIS FOR KERNEL SPACE.
-// 	// printk("========================\n");
-// 	int value;
-// 	sem_getvalue(&mutex, &value);
-// 	printk("sema mutex = %d\n", value);
-// 	sem_getvalue(&fill_count, &value);
-// 	printk("sema fill_count = %d\n", value);
-// 	sem_getvalue(&empty_count, &value);
-// 	printk("sema empty_count = %d\n", value);
-// 	printk("---------------------------------\n");
-// 	return;
-// }
