@@ -77,10 +77,10 @@ void* consumer(void* arg) {
 int main(int argc, char* argv[]) {
     srand((unsigned) time(NULL));
 
-    pthread_t t1, t2;
-    sem_init(&mutex, 0, 1);
+    pthread_t t1, t2;           // initialize threads
+    sem_init(&mutex, 0, 1);     // initialize mutexs
 
-    init();
+    init();                     // initialize buffer
 
     pthread_create(&t1, NULL, producer, NULL);
     pthread_create(&t2, NULL, consumer, NULL);
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
     pthread_join(t1, NULL);
     pthread_join(t2, NULL);
 
-    delete();
+    delete();					// delete buffer
     sem_destroy(&mutex);
 
     return 0;
