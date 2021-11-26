@@ -10,14 +10,15 @@
 #include <semaphore.h>
 
 #define DATA_LENGTH 1024
-#define MAX_ITERATE 14
+#define MAX_ITERATE 24
 
 #define __NR_init_buffer_421 442
 #define __NR_enqueue_buffer_421 443
 #define __NR_dequeue_buffer_421 444
 #define __NR_delete_buffer_421 445
 
-static sem_t mutex;
+static sem_t mutex;         // mutex used for printing
+static int counter = 0;
 
 long init(void) {
     return syscall(__NR_init_buffer_421);
@@ -39,19 +40,19 @@ void* producer(void* arg) {
     char data[DATA_LENGTH];
 
     for (int i = 0; i < MAX_ITERATE; i++) {
-        // usleep((rand() % 100) * 1000);
+        // usleep((rand() % 10) * 1000);
         usleep(2 * 1000);
         // usleep(80 * 1000);
 
-        // sem_wait(&mutex);
-        printf("To be enqueued: %d\n", i % 10);
-
         memset(data, '0' + (i % 10), DATA_LENGTH);
-        enqueue(data);
-        printf("-------------------------------\n");
-        // sem_post(&mutex);
 
-        // printf("Produced: %s\n", data);
+        sem_wait(&mutex);
+        printf(":: Enqueueing element into buffer. ::\n");
+        printf("%c : %d\n", data[0], strlen(data));
+        printf("%d items in buffer.\n\n", ++counter);
+        sem_post(&mutex);
+
+        enqueue(data);
     }
 }
 
@@ -59,26 +60,26 @@ void* consumer(void* arg) {
     char data[DATA_LENGTH];
     
     for (int i = 0; i < MAX_ITERATE; i++) {
-        // usleep((rand() % 100) * 1000);
+        // usleep((rand() % 10) * 1000);
         usleep(80 * 1000);
         // usleep(2 * 1000);
-        // sem_wait(&mutex);
-        printf("To be dequeued: %c\n", '0' + (i % 10));
-
+        
         dequeue(data);
 
-        printf("-------------------------------\n");
-        // sem_post(&mutex);
-
-        // printf("Consumed: %s\n", data);
+        sem_wait(&mutex);
+        printf(":: Dequeueing element into buffer. ::\n");
+        printf("%c : %d\n", data[0], strlen(data));
+        printf("%d items in buffer.\n\n", --counter);
+        sem_post(&mutex);
     }
 }
 
 int main(int argc, char* argv[]) {
+    srand((unsigned) time(NULL));
+
     pthread_t t1, t2;
     sem_init(&mutex, 0, 1);
-    // sem_init(&pmutex, 0, 1);
-    // sem_init(&cmutex, 0, 1);
+
     init();
 
     pthread_create(&t1, NULL, producer, NULL);
@@ -89,7 +90,6 @@ int main(int argc, char* argv[]) {
 
     delete();
     sem_destroy(&mutex);
-    // sem_destroy(&pmutex);
-    // sem_destroy(&cmutex);
+
     return 0;
 }

@@ -38,8 +38,7 @@ SYSCALL_DEFINE0(init_buffer_421) {
 	buffer.write = node;
 	buffer.length = 0;
 
-	// Initialize your semaphores here.
-	// TODO
+	// initialize semaphores
 	sema_init(&mutex, 1);
 	sema_init(&fill_count, 0);
 	sema_init(&empty_count, SIZE_OF_BUFFER);
@@ -49,78 +48,61 @@ SYSCALL_DEFINE0(init_buffer_421) {
 
 SYSCALL_DEFINE1(enqueue_buffer_421, char*, data) {
 	long err_count;
-	// decrements empty_count
-	down(&empty_count);
-	
+
 	// NOTE: You have to modify this function to use semaphores.
 	if (!buffer.write) {
 		printk("write_buffer_421(): The buffer does not exist. Aborting.\n");
 		return -1;
 	}
 
-	if (buffer.length >= SIZE_OF_BUFFER) {
-		return -1;
-	}
+	// decrements empty_count and blocks the caller if buffer is full
+	down(&empty_count);
+	down(&mutex);		// closes mutex
 
-	// closes mutex
-	down(&mutex);
-
-	// memcpy(buffer.write->data, data, DATA_LENGTH);
-	// if (copy_from_user(buffer.write->data, data, DATA_LENGTH) != 0) {
-	// 	printk("Failed to read data: %c\n", buffer.write->data[0]);
-	// }
+	// checks if data is copied to the kernel buffer without error
 	err_count = copy_from_user(buffer.write->data, data, DATA_LENGTH);
 	if (err_count != 0) {
 		printk("Enqueue: Failed to copy %ld bytes\n", err_count);
 	}
 
-	// Advance the pointer.
+	// advance the pointer and update buffer length
 	buffer.write = buffer.write->next;
 	buffer.length++;
 
-	printk("Enqueued: %c\n", data[0]);
+	printk("[+] Enqueued: %c\n", data[0]);
 	
-	// opens mutex
-	up(&mutex);
-
-	// increments fill_count
-	up(&fill_count);
+	up(&mutex);			// opens mutex
+	up(&fill_count);	// increments fill_count
 
 	return 0;
 }
 
 SYSCALL_DEFINE1(dequeue_buffer_421, char*, data) {
 	long err_count;
-	// decrements fill_count
-	down(&fill_count);
 
-	// NOTE: Implement this function.
 	if (!buffer.write) {
 		printk("dequeue_buffer_421(): The buffer does not exist. Aborting.\n");
 		return -1;
 	}
-	if (buffer.length <= 0) {
-		return -1;
-	}
+	
+	// decrements fill_count and blocks the caller if buffer is empty
+	down(&fill_count);
+	down(&mutex);		// closes mutex
 
-	// closes mutex
-	down(&mutex);
-
+	// checks if data is copied from the kernel buffer without error
 	err_count = copy_to_user(data, buffer.read->data, DATA_LENGTH);
 	if (err_count != 0) {
 		printk("Dequeue: Failed to copy %ld bytes\n", err_count);
 	}
 
+	// advance the pointer and update buffer length
 	buffer.read = buffer.read->next;
 	buffer.length--;
 
-	printk("Dequeued: %c\n", data[0]);
+	printk("[-] Dequeued: %c\n", data[0]);
 	
-	// opens mutex
-	up(&mutex);
-
-	// increments empty_count
-	up(&empty_count);
+	up(&mutex);			// opens mutex
+	up(&empty_count);	// increments empty_count
 
 	return 0;
 }
