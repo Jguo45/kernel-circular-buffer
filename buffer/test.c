@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
     pthread_join(t1, NULL);
     pthread_join(t2, NULL);
 
-    delete();					// delete buffer
+    delete();                   // delete buffer
     sem_destroy(&mutex);
 
     return 0;
