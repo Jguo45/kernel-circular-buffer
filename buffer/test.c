@@ -20,6 +20,7 @@
 static sem_t mutex;         // mutex used for printing
 static int counter = 0;
 
+
 long init(void) {
     return syscall(__NR_init_buffer_421);
 }
@@ -36,6 +37,7 @@ long delete(void) {
     return syscall(__NR_delete_buffer_421);
 }
 
+
 void* producer(void* arg) {
     char data[DATA_LENGTH];
 
@@ -44,6 +46,7 @@ void* producer(void* arg) {
         usleep(2 * 1000);
         // usleep(80 * 1000);
 
+        // initialize data to 1024 characters of a number
         memset(data, '0' + (i % 10), DATA_LENGTH);
 
         sem_wait(&mutex);
@@ -80,7 +83,7 @@ int main(int argc, char* argv[]) {
     pthread_t t1, t2;           // initialize threads
     sem_init(&mutex, 0, 1);     // initialize mutexs
 
-    init();                     // initialize buffer
+    // init();                     // initialize buffer
 
     pthread_create(&t1, NULL, producer, NULL);
     pthread_create(&t2, NULL, consumer, NULL);
@@ -89,7 +92,7 @@ int main(int argc, char* argv[]) {
     pthread_join(t2, NULL);
 
     delete();                   // delete buffer
-    sem_destroy(&mutex);
+    sem_destroy(&mutex);        // destroy the mutex
 
     return 0;
 }

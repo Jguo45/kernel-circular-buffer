@@ -49,7 +49,6 @@ SYSCALL_DEFINE0(init_buffer_421) {
 SYSCALL_DEFINE1(enqueue_buffer_421, char*, data) {
 	long err_count;
 
-	// NOTE: You have to modify this function to use semaphores.
 	if (!buffer.write) {
 		printk("write_buffer_421(): The buffer does not exist. Aborting.\n");
 		return -1;
@@ -57,7 +56,7 @@ SYSCALL_DEFINE1(enqueue_buffer_421, char*, data) {
 
 	// decrements empty_count and blocks the caller if buffer is full
 	down(&empty_count);
-	down(&mutex);		// closes mutex
+	down(&mutex);       // closes mutex
 
 	// checks if data is copied to the kernel buffer without error
 	err_count = copy_from_user(buffer.write->data, data, DATA_LENGTH);
@@ -69,10 +68,10 @@ SYSCALL_DEFINE1(enqueue_buffer_421, char*, data) {
 	buffer.write = buffer.write->next;
 	buffer.length++;
 
-	printk("[+] Enqueued: %c\n", data[0]);
+	printk("[+] Enqueued: %c...\n", data[0]);
 	
-	up(&mutex);			// opens mutex
-	up(&fill_count);	// increments fill_count
+	up(&mutex);         // opens mutex
+	up(&fill_count);    // increments fill_count
 
 	return 0;
 }
@@ -87,7 +86,7 @@ SYSCALL_DEFINE1(dequeue_buffer_421, char*, data) {
 	
 	// decrements fill_count and blocks the caller if buffer is empty
 	down(&fill_count);
-	down(&mutex);		// closes mutex
+	down(&mutex);       // closes mutex
 
 	// checks if data is copied from the kernel buffer without error
 	err_count = copy_to_user(data, buffer.read->data, DATA_LENGTH);
@@ -99,10 +98,10 @@ SYSCALL_DEFINE1(dequeue_buffer_421, char*, data) {
 	buffer.read = buffer.read->next;
 	buffer.length--;
 
-	printk("[-] Dequeued: %c\n", data[0]);
+	printk("[-] Dequeued: %c...\n", data[0]);
 	
-	up(&mutex);			// opens mutex
-	up(&empty_count);	// increments empty_count
+	up(&mutex);         // opens mutex
+	up(&empty_count);   // increments empty_count
 
 	return 0;
 }
