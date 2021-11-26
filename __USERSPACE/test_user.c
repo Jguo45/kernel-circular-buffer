@@ -10,28 +10,26 @@
 
 #define MAX_ITERATE 14
 
-sem_t mutex;
-sem_t pmutex;
-sem_t cmutex;
+static sem_t mutex;
+static int counter = 0;
 
 void* producer(void* arg) {
     char data[DATA_LENGTH];
 
     for (int i = 0; i < MAX_ITERATE; i++) {
-        // usleep((rand() % 100) * 1000);
+        usleep((rand() % 10) * 1000);
         // usleep(2 * 1000);
-        usleep(80 * 1000);
-
-        // sem_wait(&mutex);
-        // printf("To be enqueued: %d\n", i % 10);
-        // printf("-------------------------------\n");
-        printf("Enqueue: %d\n", i % 10);
+        // usleep(80 * 1000);
 
         memset(data, '0' + (i % 10), DATA_LENGTH);
-        enqueue_buffer_421(data);
-        // sem_post(&mutex);
 
-        // printf("Produced: %s\n", data);
+        sem_wait(&mutex);
+        printf(":: Enqueueing element into buffer. ::\n");
+        printf("%c : %d\n", data[0], strlen(data));
+        printf("%d items in buffer.\n", ++counter);
+        sem_post(&mutex);
+
+        enqueue_buffer_421(data);
     }
 }
 
@@ -39,29 +37,26 @@ void* consumer(void* arg) {
     char data[DATA_LENGTH];
     
     for (int i = 0; i < MAX_ITERATE; i++) {
-        // usleep((rand() % 100) * 1000);
+        usleep((rand() % 10) * 1000);
         // usleep(80 * 1000);
-        usleep(2 * 1000);
-        // sem_wait(&mutex);
-        // printf("To be dequeued: %c\n", '0' + (i % 10));
-        // printf("-------------------------------\n");
-
-
+        // usleep(2 * 1000);
+        
         dequeue_buffer_421(data);
 
-        printf("Dequeue: %c\n", data[0]);
-
-        // sem_post(&mutex);
-
-        // printf("Consumed: %s\n", data);
+        sem_wait(&mutex);
+        printf(":: Dequeueing element into buffer. ::\n");
+        printf("%c : %d\n", data[0], strlen(data));
+        printf("%d items in buffer.\n", --counter);
+        sem_post(&mutex);
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    srand((unsigned) time(NULL));
+
     pthread_t t1, t2;
     sem_init(&mutex, 0, 1);
-    sem_init(&pmutex, 0, 1);
-    sem_init(&cmutex, 0, 1);
+
     init_buffer_421();
 
     pthread_create(&t1, NULL, producer, NULL);
@@ -72,7 +67,6 @@ int main() {
 
     delete_buffer_421();
     sem_destroy(&mutex);
-    sem_destroy(&pmutex);
-    sem_destroy(&cmutex);
+
     return 0;
 }

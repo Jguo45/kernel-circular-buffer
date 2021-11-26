@@ -44,67 +44,49 @@ long init_buffer_421(void) {
 }
 
 long enqueue_buffer_421(char * data) {
-	// decrements empty_count
-	sem_wait(&empty_count);
-	
 	// NOTE: You have to modify this function to use semaphores.
 	if (!buffer.write) {
 		printf("write_buffer_421(): The buffer does not exist. Aborting.\n");
 		return -1;
 	}
 
-	if (buffer.length >= SIZE_OF_BUFFER) {
-		return -1;
-	}
+	// decrements empty_count and blocks the caller if buffer is full
+	sem_wait(&empty_count);
+	sem_wait(&mutex);								// closes the mutex
+	memcpy(buffer.write->data, data, DATA_LENGTH);	// copies the data from data into the buffer
 
-	// closes mutex
-	sem_wait(&mutex);
-
-	memcpy(buffer.write->data, data, DATA_LENGTH);
-
-	// Advance the pointer.
+	// advance the pointer and update buffer length
 	buffer.write = buffer.write->next;
 	buffer.length++;
 
     print_semaphores();
 	
-	// opens mutex
-	sem_post(&mutex);
-
-	// increments fill_count
-	sem_post(&fill_count);
+	sem_post(&mutex);								// opens the mutex
+	sem_post(&fill_count);							// increments fill_count
 
 	return 0;
 }
 
 long dequeue_buffer_421(char * data) {
-	// decrements fill_count
-	sem_wait(&fill_count);
-
 	// NOTE: Implement this function.
 	if (!buffer.write) {
 		printf("dequeue_buffer_421(): The buffer does not exist. Aborting.\n");
 		return -1;
 	}
-	if (buffer.length <= 0) {
-		return -1;
-	}
 
-	// closes mutex
-	sem_wait(&mutex);
+	// decrements fill_count and blocks the caller if buffer is empty
+	sem_wait(&fill_count);
+	sem_wait(&mutex);								// closes the mutex
 
-	memcpy(data, buffer.read->data, DATA_LENGTH);
-	// memset(buffer.read->data, 0, DATA_LENGTH);
+	memcpy(data, buffer.read->data, DATA_LENGTH);	// copies the the data from buffer into data
 
+	// advance read pointer and update buffer length
 	buffer.read = buffer.read->next;
 	buffer.length--;
 	
 	print_semaphores();
-	// opens mutex
-	sem_post(&mutex);
-
-	// increments empty_count
-	sem_post(&empty_count);
+	sem_post(&mutex);								// opens the mutex
+	sem_post(&empty_count);							// increments empty_count
 
 	return 0;
 }
@@ -142,7 +124,7 @@ void print_semaphores(void) {
 	// You can call this method to check the status of the semaphores.
 	// Don't forget to initialize them first!
 	// YOU DO NOT NEED TO IMPLEMENT THIS FOR KERNEL SPACE.
-	// printf("========================\n");
+	printf("------------------------------\n");
 	int value;
 	sem_getvalue(&mutex, &value);
 	printf("sem_t mutex = %d\n", value);
@@ -150,6 +132,7 @@ void print_semaphores(void) {
 	printf("sem_t fill_count = %d\n", value);
 	sem_getvalue(&empty_count, &value);
 	printf("sem_t empty_count = %d\n", value);
-	printf("========================\n");
+	printf("------------------------------\n");
+
 	return;
 }
