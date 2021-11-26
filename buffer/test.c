@@ -10,7 +10,7 @@
 #include <semaphore.h>
 
 #define DATA_LENGTH 1024
-#define MAX_ITERATE 24
+#define MAX_ITERATE 100000
 
 #define __NR_init_buffer_421 442
 #define __NR_enqueue_buffer_421 443
@@ -42,8 +42,8 @@ void* producer(void* arg) {
     char data[DATA_LENGTH];
 
     for (int i = 0; i < MAX_ITERATE; i++) {
-        // usleep((rand() % 10) * 1000);
-        usleep(2 * 1000);
+        usleep((rand() % 10) * 1000);
+        // usleep(2 * 1000);
         // usleep(80 * 1000);
 
         // initialize data to 1024 characters of a number
@@ -63,8 +63,8 @@ void* consumer(void* arg) {
     char data[DATA_LENGTH];
     
     for (int i = 0; i < MAX_ITERATE; i++) {
-        // usleep((rand() % 10) * 1000);
-        usleep(80 * 1000);
+        usleep((rand() % 10) * 1000);
+        // usleep(80 * 1000);
         // usleep(2 * 1000);
         
         dequeue(data);
@@ -78,12 +78,15 @@ void* consumer(void* arg) {
 }
 
 int main(int argc, char* argv[]) {
+    // seeds rand() with the current time
     srand((unsigned) time(NULL));
+
+    long rv;
 
     pthread_t t1, t2;           // initialize threads
     sem_init(&mutex, 0, 1);     // initialize mutexs
 
-    // init();                     // initialize buffer
+    init();                     // initialize buffer
 
     pthread_create(&t1, NULL, producer, NULL);
     pthread_create(&t2, NULL, consumer, NULL);
