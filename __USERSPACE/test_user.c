@@ -8,7 +8,7 @@
 
 #include "buffer.h"
 
-#define MAX_ITERATE 14
+#define MAX_ITERATE 100000
 
 static sem_t mutex;
 static int counter = 0;
@@ -18,8 +18,6 @@ void* producer(void* arg) {
 
     for (int i = 0; i < MAX_ITERATE; i++) {
         usleep((rand() % 10) * 1000);
-        // usleep(2 * 1000);
-        // usleep(80 * 1000);
 
         memset(data, '0' + (i % 10), DATA_LENGTH);
 
@@ -38,8 +36,6 @@ void* consumer(void* arg) {
     
     for (int i = 0; i < MAX_ITERATE; i++) {
         usleep((rand() % 10) * 1000);
-        // usleep(80 * 1000);
-        // usleep(2 * 1000);
         
         dequeue_buffer_421(data);
 

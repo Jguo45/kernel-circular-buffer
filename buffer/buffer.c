@@ -47,7 +47,7 @@ SYSCALL_DEFINE0(init_buffer_421) {
 }
 
 SYSCALL_DEFINE1(enqueue_buffer_421, char*, data) {
-	long err_count;
+	long err_count;		// stores return value of copy_from_user
 
 	if (!buffer.write) {
 		printk("write_buffer_421(): The buffer does not exist. Aborting.\n");
@@ -56,7 +56,7 @@ SYSCALL_DEFINE1(enqueue_buffer_421, char*, data) {
 
 	// decrements empty_count and blocks the caller if buffer is full
 	down(&empty_count);
-	down(&mutex);       // closes mutex
+	down(&mutex);       // closes mutex so no other thread can access this
 
 	// checks if data is copied to the kernel buffer without error
 	err_count = copy_from_user(buffer.write->data, data, DATA_LENGTH);
@@ -70,14 +70,14 @@ SYSCALL_DEFINE1(enqueue_buffer_421, char*, data) {
 
 	printk("[+] Enqueued: %c...\n", data[0]);
 	
-	up(&mutex);         // opens mutex
+	up(&mutex);         // opens mutex for other threads to use
 	up(&fill_count);    // increments fill_count
 
 	return 0;
 }
 
 SYSCALL_DEFINE1(dequeue_buffer_421, char*, data) {
-	long err_count;
+	long err_count;		// stores return value of copy_to_user
 
 	if (!buffer.write) {
 		printk("dequeue_buffer_421(): The buffer does not exist. Aborting.\n");
@@ -86,7 +86,7 @@ SYSCALL_DEFINE1(dequeue_buffer_421, char*, data) {
 	
 	// decrements fill_count and blocks the caller if buffer is empty
 	down(&fill_count);
-	down(&mutex);       // closes mutex
+	down(&mutex);       // closes mutex so no other thread can access this section
 
 	// checks if data is copied from the kernel buffer without error
 	err_count = copy_to_user(data, buffer.read->data, DATA_LENGTH);
@@ -100,7 +100,7 @@ SYSCALL_DEFINE1(dequeue_buffer_421, char*, data) {
 
 	printk("[-] Dequeued: %c...\n", data[0]);
 	
-	up(&mutex);         // opens mutex
+	up(&mutex);         // opens mutex for other threads to use
 	up(&empty_count);   // increments empty_count
 
 	return 0;

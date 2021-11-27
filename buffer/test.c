@@ -43,8 +43,6 @@ void* producer(void* arg) {
 
     for (int i = 0; i < MAX_ITERATE; i++) {
         usleep((rand() % 10) * 1000);
-        // usleep(2 * 1000);
-        // usleep(80 * 1000);
 
         // initialize data to 1024 characters of a number
         memset(data, '0' + (i % 10), DATA_LENGTH);
@@ -64,8 +62,6 @@ void* consumer(void* arg) {
     
     for (int i = 0; i < MAX_ITERATE; i++) {
         usleep((rand() % 10) * 1000);
-        // usleep(80 * 1000);
-        // usleep(2 * 1000);
         
         dequeue(data);
 
@@ -80,8 +76,6 @@ void* consumer(void* arg) {
 int main(int argc, char* argv[]) {
     // seeds rand() with the current time
     srand((unsigned) time(NULL));
-
-    long rv;
 
     pthread_t t1, t2;           // initialize threads
     sem_init(&mutex, 0, 1);     // initialize mutexs
